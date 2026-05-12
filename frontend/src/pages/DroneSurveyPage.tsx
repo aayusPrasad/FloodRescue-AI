@@ -2,6 +2,11 @@ import { useState } from 'react'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { getAssetUrl, predictBatchFlood } from '../services/api'
 
+type GPSData = {
+  latitude: number
+  longitude: number
+}
+
 type BatchItem = {
   prediction: string
   confidence: number
@@ -10,6 +15,7 @@ type BatchItem = {
   overlay_image?: string | null
   overlay_url?: string | null
   original_filename: string
+  gps?: GPSData | null
 }
 
 type BatchResult = {
@@ -35,7 +41,10 @@ export default function DroneSurveyPage() {
     setBatchResult(null)
     setError('')
 
-    const previewUrls = fileArray.map((file) => URL.createObjectURL(file))
+    const previewUrls = fileArray.map((file) =>
+      URL.createObjectURL(file)
+    )
+
     setPreviews(previewUrls)
   }
 
@@ -50,9 +59,13 @@ export default function DroneSurveyPage() {
       setError('')
 
       const data = await predictBatchFlood(files)
+
       setBatchResult(data)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Batch prediction failed. Please try again.')
+      setError(
+        err.response?.data?.detail ||
+        'Batch prediction failed. Please try again.'
+      )
     } finally {
       setLoading(false)
     }
@@ -71,12 +84,13 @@ export default function DroneSurveyPage() {
 
         <p className="mt-3 max-w-3xl text-slate-600">
           Upload multiple drone-captured flood images and let FloodRescue AI analyze
-          flood presence, severity, flood coverage, and rescue priority indicators.
+          flood presence, severity, flood coverage, and geo-tagged disaster intelligence.
         </p>
       </div>
 
       <div className="glass-card p-6">
         <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/50 p-8 text-center">
+
           <input
             type="file"
             accept="image/*"
@@ -96,23 +110,27 @@ export default function DroneSurveyPage() {
           <p className="mt-2 text-sm text-slate-500">
             Select multiple JPG/PNG images captured from drone survey.
           </p>
+
         </label>
 
         {previews.length > 0 && (
           <div className="mt-6">
+
             <p className="mb-3 font-semibold text-brand-ocean">
               Selected Images: {previews.length}
             </p>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
               {previews.map((preview, index) => (
                 <img
-                  key={preview}
+                  key={index}
                   src={preview}
                   alt={`Drone preview ${index + 1}`}
                   className="h-40 w-full rounded-xl object-cover shadow-sm"
                 />
               ))}
+
             </div>
           </div>
         )}
@@ -137,52 +155,72 @@ export default function DroneSurveyPage() {
 
       {batchResult && (
         <div className="mt-10 space-y-8">
+
           <div className="grid gap-5 md:grid-cols-4">
+
             <div className="glass-card p-5">
-              <p className="text-sm text-slate-500">Total Images</p>
+              <p className="text-sm text-slate-500">
+                Total Images
+              </p>
+
               <h3 className="mt-2 text-3xl font-bold text-brand-ocean">
                 {batchResult.total_images}
               </h3>
             </div>
 
             <div className="glass-card p-5">
-              <p className="text-sm text-slate-500">Flood Detected</p>
+              <p className="text-sm text-slate-500">
+                Flood Detected
+              </p>
+
               <h3 className="mt-2 text-3xl font-bold text-brand-ocean">
                 {batchResult.flood_detected}
               </h3>
             </div>
 
             <div className="glass-card p-5">
-              <p className="text-sm text-slate-500">Average Flood Area</p>
+              <p className="text-sm text-slate-500">
+                Average Flood Area
+              </p>
+
               <h3 className="mt-2 text-3xl font-bold text-brand-ocean">
                 {batchResult.average_flood_area}%
               </h3>
             </div>
 
             <div className="glass-card p-5">
-              <p className="text-sm text-slate-500">Most Severe</p>
+              <p className="text-sm text-slate-500">
+                Most Severe
+              </p>
+
               <h3 className="mt-2 text-xl font-bold text-brand-ocean">
                 {batchResult.most_severe}
               </h3>
             </div>
+
           </div>
 
           <div className="glass-card p-6">
+
             <h2 className="text-2xl font-bold text-brand-ocean">
               Drone Image Analysis Results
             </h2>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
+
               {batchResult.results.map((item, index) => (
+
                 <div
                   key={`${item.original_filename}-${index}`}
                   className="rounded-2xl border border-teal-100 bg-white/80 p-5 shadow-sm"
                 >
+
                   <p className="text-sm font-semibold text-slate-500">
                     {item.original_filename}
                   </p>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
+
                     <div>
                       <p className="mb-2 text-sm text-slate-500">
                         Original Image
@@ -211,10 +249,13 @@ export default function DroneSurveyPage() {
                           No overlay generated
                         </div>
                       )}
+
                     </div>
+
                   </div>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
+
                     <p>
                       <strong>Prediction:</strong> {item.prediction}
                     </p>
@@ -231,11 +272,31 @@ export default function DroneSurveyPage() {
                       <strong>Flood Area:</strong>{' '}
                       {item.flood_area_percentage}%
                     </p>
+
+                    {item.gps && (
+                      <>
+                        <p>
+                          <strong>Latitude:</strong>{' '}
+                          {item.gps.latitude}
+                        </p>
+
+                        <p>
+                          <strong>Longitude:</strong>{' '}
+                          {item.gps.longitude}
+                        </p>
+                      </>
+                    )}
+
                   </div>
+
                 </div>
+
               ))}
+
             </div>
+
           </div>
+
         </div>
       )}
     </div>
