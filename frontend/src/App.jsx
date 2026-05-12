@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage'
 import AnalyzePage from './pages/AnalyzePage'
 import DroneSurveyPage from './pages/DroneSurveyPage'
 import DashboardPage from './pages/DashboardPage'
+import FloodMapPage from './pages/FloodMapPage'
 import AboutPage from './pages/AboutPage'
 import SafetyTipsPage from './pages/SafetyTipsPage'
 
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/analyze" element={<AnalyzePage />} />
         <Route path="/drone-survey" element={<DroneSurveyPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/flood-map" element={<FloodMapPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/safety-tips" element={<SafetyTipsPage />} />
       </Route>
