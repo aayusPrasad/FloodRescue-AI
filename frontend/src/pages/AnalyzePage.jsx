@@ -49,11 +49,34 @@ export default function AnalyzePage() {
           <div className="glass-card p-6">
             <h2 className="text-xl font-semibold text-brand-ocean">Prediction Results</h2>
             <ul className="mt-4 space-y-2">
-              <li><strong>Prediction:</strong> {result.prediction}</li>
-              <li><strong>Confidence:</strong> {result.confidence}%</li>
-              <li><strong>Severity:</strong> {result.severity}</li>
-              <li><strong>Flood Area:</strong> {result.flood_area_percentage}%</li>
-            </ul>
+  <li>
+    <strong>Prediction:</strong> {result.prediction}
+  </li>
+
+  <li>
+    <strong>Confidence:</strong> {result.confidence}%
+  </li>
+
+  <li>
+    <strong>Severity:</strong> {result.severity}
+  </li>
+
+  <li>
+    <strong>Flood Area:</strong> {result.flood_area_percentage}%
+  </li>
+
+  {result.gps && (
+    <>
+      <li>
+        <strong>Latitude:</strong> {result.gps.latitude}
+      </li>
+
+      <li>
+        <strong>Longitude:</strong> {result.gps.longitude}
+      </li>
+    </>
+  )}
+</ul>
           </div>
           <div className="glass-card p-6">
             <h2 className="text-xl font-semibold text-brand-ocean">Visual Comparison</h2>
