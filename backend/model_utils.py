@@ -9,6 +9,7 @@ from torchvision import transforms
 
 from classification_model import build_classification_model
 from segmentation_model import UNet
+from utils.gps_utils import extract_gps
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -141,19 +142,24 @@ def predict_segmentation(image_path):
 
 
 def analyze_flood_image(image_path):
+
     prediction, confidence = predict_classification(image_path)
 
     if prediction == "flood":
         severity, flood_area, overlay_filename = predict_segmentation(image_path)
+
     else:
         severity = "No Flood Risk"
         flood_area = 0.0
         overlay_filename = None
+
+    gps_data = extract_gps(image_path)
 
     return {
         "prediction": prediction,
         "confidence": float(round(confidence, 2)),
         "severity": severity,
         "flood_area_percentage": flood_area,
-        "overlay_image": overlay_filename
+        "overlay_image": overlay_filename,
+        "gps": gps_data
     }
