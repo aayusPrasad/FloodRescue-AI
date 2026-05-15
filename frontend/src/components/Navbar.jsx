@@ -7,6 +7,7 @@ const links = [
   { to: '/drone-survey', label: 'Drone Survey' },
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/flood-map', label: 'Flood Map' },
+  { to: '/impact-3d', label: '3D Impact' },
   { to: '/about', label: 'About' },
   { to: '/safety-tips', label: 'Safety Tips' },
 ]
