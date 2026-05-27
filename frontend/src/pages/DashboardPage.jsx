@@ -12,6 +12,8 @@ import {
   YAxis,
 } from 'recharts'
 import { clearHistory, getHistory } from '../services/history'
+import { generateFloodReportPdf } from '../services/report'
+import { useAuth } from '../context/AuthContext'
 
 const COLORS = ['#0e7490', '#14b8a6', '#7dd3fc', '#99f6e4']
 
@@ -25,6 +27,7 @@ const normalizeSeverity = (value = '') => {
 
 export default function DashboardPage() {
   const [history, setHistory] = useState(() => getHistory())
+  const { user } = useAuth()
 
   const computed = useMemo(() => {
     const total = history.length
@@ -57,21 +60,43 @@ export default function DashboardPage() {
     return { total, floodCount, noFloodCount, severityCounts, averageArea, severityPieData, floodBarData }
   }, [history])
 
+  const latestResult = history[0] || null
+
   const handleClear = () => {
     clearHistory()
     setHistory([])
+  }
+
+  const handleDownloadReport = async () => {
+    await generateFloodReportPdf({
+      user,
+      result: latestResult,
+      previewUrl: '',
+      overlayUrl: latestResult?.overlay_url || '',
+      history,
+      dashboardSelectors: {
+        severityChartSelector: '#severity-chart-card',
+        floodBarSelector: '#flood-bar-card',
+        statsSelector: '#dashboard-stats-grid',
+      },
+    })
   }
 
   return (
     <div className="page-container space-y-6 py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold text-brand-ocean">Analytics Dashboard</h1>
-        <button onClick={handleClear} className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">
-          Clear History
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleDownloadReport} className="rounded-xl border border-brand-teal bg-teal-50 px-4 py-2 text-sm font-semibold text-brand-ocean hover:bg-teal-100">
+            Download AI Report
+          </button>
+          <button onClick={handleClear} className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">
+            Clear History
+          </button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div id="dashboard-stats-grid" className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Total Analyses" value={computed.total} />
         <StatCard label="Flood Detected" value={computed.floodCount} />
         <StatCard label="No Flood" value={computed.noFloodCount} />
@@ -86,7 +111,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <div className="glass-card h-80 p-5">
+        <div id="severity-chart-card" className="glass-card h-80 p-5">
           <h2 className="mb-3 font-semibold text-brand-ocean">Severity Distribution</h2>
           <ResponsiveContainer width="100%" height="90%">
             <PieChart>
@@ -100,7 +125,7 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card h-80 p-5">
+        <div id="flood-bar-card" className="glass-card h-80 p-5">
           <h2 className="mb-3 font-semibold text-brand-ocean">Flood vs No Flood</h2>
           <ResponsiveContainer width="100%" height="90%">
             <BarChart data={computed.floodBarData}>
