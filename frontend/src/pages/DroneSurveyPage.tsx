@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { getAssetUrl, predictBatchFlood } from '../services/api'
+import { generateFloodReportPdf } from '../services/report'
+import { useAuth } from '../context/AuthContext'
+import { getHistory } from '../services/history'
 
 type GPSData = {
   latitude: number
@@ -33,6 +36,7 @@ export default function DroneSurveyPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [batchResult, setBatchResult] = useState<BatchResult | null>(null)
+  const { user } = useAuth()
 
   const handleFiles = (selectedFiles: FileList) => {
     const fileArray = Array.from(selectedFiles)
@@ -41,9 +45,7 @@ export default function DroneSurveyPage() {
     setBatchResult(null)
     setError('')
 
-    const previewUrls = fileArray.map((file) =>
-      URL.createObjectURL(file)
-    )
+    const previewUrls = fileArray.map((file) => URL.createObjectURL(file))
 
     setPreviews(previewUrls)
   }
@@ -63,12 +65,33 @@ export default function DroneSurveyPage() {
       setBatchResult(data)
     } catch (err: any) {
       setError(
-        err.response?.data?.detail ||
-        'Batch prediction failed. Please try again.'
+        err.response?.data?.detail || 'Batch prediction failed. Please try again.',
       )
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleDownloadReport = async () => {
+    const history = getHistory()
+    const latest = history[0] || null
+    const firstOverlayFromBatch =
+      batchResult?.results?.find((r) => r.overlay_url)?.overlay_url || ''
+
+    await generateFloodReportPdf({
+      user,
+      result: latest,
+      previewUrl: previews[0] || '',
+      overlayUrl: firstOverlayFromBatch
+        ? getAssetUrl(firstOverlayFromBatch)
+        : latest?.overlay_url || '',
+      history,
+      dashboardSelectors: {
+        severityChartSelector: '#severity-chart-card',
+        floodBarSelector: '#flood-bar-card',
+        statsSelector: '#dashboard-stats-grid',
+      },
+    })
   }
 
   return (
@@ -83,14 +106,14 @@ export default function DroneSurveyPage() {
         </h1>
 
         <p className="mt-3 max-w-3xl text-slate-600">
-          Upload multiple drone-captured flood images and let FloodRescue AI analyze
-          flood presence, severity, flood coverage, and geo-tagged disaster intelligence.
+          Upload multiple drone-captured flood images and let FloodRescue AI
+          analyze flood presence, severity, flood coverage, and geo-tagged
+          disaster intelligence.
         </p>
       </div>
 
       <div className="glass-card p-6">
         <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/50 p-8 text-center">
-
           <input
             type="file"
             accept="image/*"
@@ -110,18 +133,15 @@ export default function DroneSurveyPage() {
           <p className="mt-2 text-sm text-slate-500">
             Select multiple JPG/PNG images captured from drone survey.
           </p>
-
         </label>
 
         {previews.length > 0 && (
           <div className="mt-6">
-
             <p className="mb-3 font-semibold text-brand-ocean">
               Selected Images: {previews.length}
             </p>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
               {previews.map((preview, index) => (
                 <img
                   key={index}
@@ -130,38 +150,41 @@ export default function DroneSurveyPage() {
                   className="h-40 w-full rounded-xl object-cover shadow-sm"
                 />
               ))}
-
             </div>
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="mt-6 rounded-xl bg-brand-teal px-6 py-3 font-semibold text-white shadow-md hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? 'Analyzing Survey...' : 'Run Batch Analysis'}
-        </button>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="rounded-xl bg-brand-teal px-6 py-3 font-semibold text-white shadow-md hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? 'Analyzing Survey...' : 'Run Batch Analysis'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDownloadReport}
+            className="rounded-xl border border-brand-teal bg-teal-50 px-6 py-3 font-semibold text-brand-ocean hover:bg-teal-100"
+          >
+            Download AI Report
+          </button>
+        </div>
 
         {loading && <LoadingSpinner />}
 
         {error && (
-          <p className="mt-4 rounded-lg bg-red-100 p-3 text-red-700">
-            {error}
-          </p>
+          <p className="mt-4 rounded-lg bg-red-100 p-3 text-red-700">{error}</p>
         )}
       </div>
 
       {batchResult && (
         <div className="mt-10 space-y-8">
-
           <div className="grid gap-5 md:grid-cols-4">
-
             <div className="glass-card p-5">
-              <p className="text-sm text-slate-500">
-                Total Images
-              </p>
+              <p className="text-sm text-slate-500">Total Images</p>
 
               <h3 className="mt-2 text-3xl font-bold text-brand-ocean">
                 {batchResult.total_images}
@@ -169,9 +192,7 @@ export default function DroneSurveyPage() {
             </div>
 
             <div className="glass-card p-5">
-              <p className="text-sm text-slate-500">
-                Flood Detected
-              </p>
+              <p className="text-sm text-slate-500">Flood Detected</p>
 
               <h3 className="mt-2 text-3xl font-bold text-brand-ocean">
                 {batchResult.flood_detected}
@@ -179,9 +200,7 @@ export default function DroneSurveyPage() {
             </div>
 
             <div className="glass-card p-5">
-              <p className="text-sm text-slate-500">
-                Average Flood Area
-              </p>
+              <p className="text-sm text-slate-500">Average Flood Area</p>
 
               <h3 className="mt-2 text-3xl font-bold text-brand-ocean">
                 {batchResult.average_flood_area}%
@@ -189,42 +208,32 @@ export default function DroneSurveyPage() {
             </div>
 
             <div className="glass-card p-5">
-              <p className="text-sm text-slate-500">
-                Most Severe
-              </p>
+              <p className="text-sm text-slate-500">Most Severe</p>
 
               <h3 className="mt-2 text-xl font-bold text-brand-ocean">
                 {batchResult.most_severe}
               </h3>
             </div>
-
           </div>
 
           <div className="glass-card p-6">
-
             <h2 className="text-2xl font-bold text-brand-ocean">
               Drone Image Analysis Results
             </h2>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
-
               {batchResult.results.map((item, index) => (
-
                 <div
                   key={`${item.original_filename}-${index}`}
                   className="rounded-2xl border border-teal-100 bg-white/80 p-5 shadow-sm"
                 >
-
                   <p className="text-sm font-semibold text-slate-500">
                     {item.original_filename}
                   </p>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
-
                     <div>
-                      <p className="mb-2 text-sm text-slate-500">
-                        Original Image
-                      </p>
+                      <p className="mb-2 text-sm text-slate-500">Original Image</p>
 
                       <img
                         src={previews[index]}
@@ -234,9 +243,7 @@ export default function DroneSurveyPage() {
                     </div>
 
                     <div>
-                      <p className="mb-2 text-sm text-slate-500">
-                        AI Overlay
-                      </p>
+                      <p className="mb-2 text-sm text-slate-500">AI Overlay</p>
 
                       {item.overlay_url ? (
                         <img
@@ -249,13 +256,10 @@ export default function DroneSurveyPage() {
                           No overlay generated
                         </div>
                       )}
-
                     </div>
-
                   </div>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
-
                     <p>
                       <strong>Prediction:</strong> {item.prediction}
                     </p>
@@ -269,34 +273,25 @@ export default function DroneSurveyPage() {
                     </p>
 
                     <p>
-                      <strong>Flood Area:</strong>{' '}
-                      {item.flood_area_percentage}%
+                      <strong>Flood Area:</strong> {item.flood_area_percentage}%
                     </p>
 
                     {item.gps && (
                       <>
                         <p>
-                          <strong>Latitude:</strong>{' '}
-                          {item.gps.latitude}
+                          <strong>Latitude:</strong> {item.gps.latitude}
                         </p>
 
                         <p>
-                          <strong>Longitude:</strong>{' '}
-                          {item.gps.longitude}
+                          <strong>Longitude:</strong> {item.gps.longitude}
                         </p>
                       </>
                     )}
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           </div>
-
         </div>
       )}
     </div>
