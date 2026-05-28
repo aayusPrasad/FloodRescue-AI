@@ -14,17 +14,15 @@ from utils.gps_utils import extract_gps
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CLASSIFICATION_MODEL_PATH = os.path.join(
     BASE_DIR,
-    "models",
     "floodrescue_classification_model.pth"
 )
 
 SEGMENTATION_MODEL_PATH = os.path.join(
     BASE_DIR,
-    "models",
     "floodrescue_segmentation_unet.pth"
 )
 
