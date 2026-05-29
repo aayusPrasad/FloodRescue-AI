@@ -183,7 +183,7 @@ Frontend will be available at: `https://aayup78bm-floodrescueai-1.hf.space`
 - Segmentation thresholds and severity bands are heuristic and may require region-specific calibration.
 - Very low-light, obstructed, or low-resolution images can reduce reliability.
 
----## Contributing
+## Contributing
 
 Contributions are welcome.
 
