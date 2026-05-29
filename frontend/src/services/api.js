@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'https://huggingface.co/spaces/aayup78bm/FloodRescueAI_1'
+const API_BASE_URL = 'https://aayup78bm-floodrescueai-1.hf.space'
 
 export const predictFlood = async (file) => {
   const formData = new FormData()
